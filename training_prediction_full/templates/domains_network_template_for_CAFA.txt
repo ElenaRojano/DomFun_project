@@ -1,0 +1,22 @@
+prepare_files){
+	source ~soft_bio_267/initializes/init_ruby
+	PATH=~elenarojano/dev_gem/DomFun/bin:$PATH
+	export PATH	
+	rm -rf frags
+    mkdir frags
+	NUMBER=1
+	?	
+	merge_pairs.rb -i $network_path -k '$domain_regex' -o "frags/fr_" -n $NUMBER -m 1
+	cat frags/fr_* > all_tuples.txt
+	cut -f 1,2 frags/fr_1.txt | sort -u > net.txt
+	cut -f 2,3 frags/fr_1.txt | sort -u >> net.txt
+}
+
+network_analysis_$methods){
+	source ~soft_bio_267/initializes/init_netanalyzer	
+	mkdir raw
+	LAYERS='domains,$domain_regex;annotations,$regex;protID,[A-Za-z0-9]' #change annotations to $annotation_type when know how to declare several parameters
+	echo (*) > tracker
+	?	
+	NetAnalyzer.rb -i prepare_files)/net.txt -l $LAYERS -m (*) -T [cpu] -u 'annotations,domains;protID' -a raw/(*)"_values.txt" -N
+}

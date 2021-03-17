@@ -1,0 +1,8 @@
+cafa_system_dir = '/mnt/home/users/bio_267_uma/elenarojano/projects/domfun_experiments/revision/CAFA_matlab_validation/CAFA2'
+dir_validation = '/mnt/home/users/bio_267_uma/elenarojano/projects/domfun_experiments/revision/CAFA_matlab_validation/evaluation_results/eval_curCAFA3_all'
+ontology_folder = '/mnt/home/users/bio_267_uma/elenarojano/projects/domfun_experiments/revision/CAFA_matlab_validation/CAFA2/ontology3'
+ontologies = 'MFO,BPO,CCO'
+dir_evaluation_configs = '/mnt/home/users/bio_267_uma/elenarojano/projects/domfun_experiments/revision/CAFA_matlab_validation/evaluation_configs'
+config_files = 'config2_mfo.job,config2_bpo.job,config2_cco.job'
+register_file = 'register.tab'
+sample_asignation = 'files_to_cafa'

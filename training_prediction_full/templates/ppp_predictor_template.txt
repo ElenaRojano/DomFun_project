@@ -1,0 +1,49 @@
+get_prediction_results){
+	PATH="~elenarojano/dev_gem/DomFun/bin":$PATH
+	export PATH
+	echo 'Performing proteins function prediction'
+	mkdir results
+	cut -f 1 $control_proteins > list_of_proteins.txt
+	selected_threshold=$best_threshold
+	selected_association_path=$association_path
+	if [ $integration_method == "stouffer" ]; then
+		standardize_scores.R \
+		-d $association_path \
+		-e $best_threshold \
+		-o $association_method'_training.txt' \
+		-s V3 > zscore
+		selected_threshold=`cut -f 2 zscore`
+		selected_association_path=$association_method'_training.txt'
+	fi
+	?
+	domains_to_function_predictor.rb \
+	-a $selected_association_path \
+	-f $path_to_cath \
+	-p list_of_proteins.txt \
+	-T $selected_threshold \
+	-c $domains_class \
+	-i $integration_method \
+	-t $cutoff_threshold > results/prediction_results.txt
+
+	if [ ! -s results/prediction_results.txt ] ; then
+		echo "ERROR: DomFun has failed"
+		exit 1 #Fail
+	fi
+
+	prepare_table_PR.rb \
+	-a results/prediction_results.txt \
+	-c $control_proteins \
+	-b $association_method \
+	-o results/"$association_method"_pr_table.txt
+
+	plot_density.R results/"$association_method"_pr_table.txt scorePred '' controlLabel
+	
+	ROCanalysis.R \
+	-i results/"$association_method"_pr_table.txt \
+	-s 'scorePred' \
+	-t 'controlLabel' \
+	-m $meth_roc \
+	-T $invert_flag \
+	-o results/"$association_method"_pr \
+
+}

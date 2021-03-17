@@ -1,0 +1,61 @@
+prepare_files){
+    source ~soft_bio_267/initializes/init_ruby
+	PATH="/mnt/home/users/bio_267_uma/elenarojano/dev_gem/DomFun/bin":$PATH
+	export PATH	
+	rm -rf frags
+    mkdir frags
+	if [ "$build_whole_network" == "true" ]; then
+		NUMBER=1
+	else
+		NUMBER=`echo "$folds" | cut -f 2 -d '-'`
+	fi
+	?	
+	merge_pairs.rb -i $network_path -k '$domain_regex' -o "frags/fr_" -n $NUMBER -m $conn_filter
+	cat frags/fr_* > all_tuples.txt
+	collapse_columns.rb -i all_tuples.txt -k 2 -a 3 > $annotation_name'_control.txt'
+}
+
+exec_method_$methods){
+	?
+	network_analysis_$folds){
+		echo [cpu] # This is used to set this task as multicpu on AutoFlow
+		source ~soft_bio_267/initializes/init_netanalyzer	
+
+		mkdir perf raw
+		LAYERS='domains,[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*;annotations,$regex;protID,[A-Za-z0-9]'
+		if [ "$build_whole_network" == "true" ]; then
+			## For build the whole training file
+			cut -f 1,2 prepare_files)/frags/fr_1.txt | sort -u > net.txt
+			cut -f 2,3 prepare_files)/frags/fr_1.txt | sort -u >> net.txt
+			cut -f 1,3 prepare_files)/frags/fr_1.txt | sort -u > reference_relations.txt
+		else
+			awk '{print $3 "\t" $1}' prepare_files)/frags/fr_*.txt | sort -u > control.txt
+			#cut -f 1,3 prepare_files)/frags/fr_(*).txt | sort -u > control.txt
+			cat `find prepare_files)/frags -iname "fr_*txt" -not -iname "fr_(*).txt"` | cut -f 1,2 | sort -u > net.txt 
+			cat `find prepare_files)/frags -iname "fr_*txt" -not -iname "fr_(*).txt"` | cut -f 2,3 | sort -u >> net.txt 
+			do_performance="-c control.txt" #to compare with control data
+		fi
+		?
+		NetAnalyzer.rb -i net.txt -l "$LAYERS" -m exec_method_(+) -T [cpu] -u 'annotations,domains;protID' $do_performance -a raw/exec_method_(+)_values.txt -N -p perf/exec_method_(+)_perf.txt
+	}
+
+	%process_fold_data){
+		source ~soft_bio_267/initializes/init_R
+		PATH="/mnt/home/users/bio_267_uma/elenarojano/dev_gem/DomFun/bin":$PATH
+		export PATH
+		mkdir perf
+		rm area_under_curve_pr.txt
+    	meth=exec_method_(+)
+    	files=`echo -e !network_analysis_!/perf/"$meth"_perf.txt | tr " " "," `
+		association_metrics_average.rb -f $files -c '1,2,3' > perf/"$meth"_perf.txt
+		## calculate area under curve
+		echo -e "$meth\t`area_under_curve_pr.rb -f perf/"$meth"_perf.txt -x 3 -y 2`" >> area_under_curve_pr.txt
+		# compare_AUC_values.rb -i area_under_curve_pr.txt -r /path_to_random_auc_values
+		head -n 1 perf/"$meth"_perf.txt > perf/all.txt
+		cat perf/*_perf.txt | grep -v 'cut' >> perf/all.txt
+		?
+		## add -L to lines.R if legend is not required
+		lines.R -d perf/all.txt -x rec -y prec -s meth -o P_R_curve
+		fmeasure_index.rb -f perf/all.txt > best_thresolds.txt
+	}
+}
