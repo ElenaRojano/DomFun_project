@@ -6,22 +6,35 @@ source ~soft_bio_267/initializes/init_ruby
 PATH="/mnt/home/users/bio_267_uma/elenarojano/dev_gem/DomFun/bin":$PATH
 export PATH
 
-mkdir -p tests
+dictionary=/mnt/home/users/bio_267_uma/elenarojano/projects/domfun_experiments/revision/cafa_challenge_files/cafa2/processed_files/accesion_geneid_dictionary.map
 
-current_path=`pwd`
-original_targets_files_path="/mnt/scratch/users/bio_267_uma/elenarojano/DomFun/CAFA3/data/Mapping_files"
-testing_proteins=$current_path"/temp_files/testing_proteins.map"
-cath_path="/mnt/scratch/users/bio_267_uma/elenarojano/DomFun/CATH/cath_funfams_full.tsv"
-#species=( 'ARATH' 'BACSU' 'DANRE' 'DICDI' 'ECOLI' 'HELPY' 'HUMAN' 'METJA' 'MOUSE' 'MYCGE' 'PSEPK' 'PSESM' 'RAT' 'SALCH' 'SALTY' 'SCHPO' 'STR' )
-training_proteins_path=/mnt/scratch/users/bio_267_uma/elenarojano/DomFun/CAFA3/data/CAFA3_training_data/uniprot_sprot_exp.txt
-cut -f 1 $training_proteins_path | sort -u > $current_path"/temp_files/training_proteins.txt"
-training_proteins=$current_path"/temp_files/training_proteins.txt"
-#cut -f 1,5,6 $cath_path | tail -n +2 | sed 's/"//g' > tests/cath_genes_sf.txt
-#cut -f 1,5,7 $cath_path | tail -n +2 | sed 's/"//g' > tests/cath_genes_ff.txt
-
-metrics_report.rb -a $cath_path -b $testing_proteins -c $training_proteins -o tests/output_superfamily_stats.txt
-metrics_report.rb -a $cath_path -b $testing_proteins -c $training_proteins -d funfamID -o tests/output_funfams_stats.txt
+#metrics_report.rb -i stats_input_file.txt -d $dictionary
+metrics_report.rb -i stats_input_file_cafa3_cur_cath.txt -d $dictionary -F cafa3_cur_cath_stats.html
 exit
+
+
+
+
+# #PATH TO FILES
+# current_path=`pwd`
+# training_proteins=../cafa_challenge_files/cafa3/processed_files/training_proteins.txt
+
+# mkdir -p tests
+
+# files_path="/mnt/home/users/bio_267_uma/elenarojano/projects/domfun_experiments/revision/cafa_challenge_files"
+# original_targets_files_path=$files_path"/cafa3/Mapping_files"
+# testing_proteins=$files_path"/cafa3/processed_files/testing_proteins.txt"
+# cath_path="$SCRATCH/DomFun/CATH/cath_funfams_full.tsv"
+# #species=( 'ARATH' 'BACSU' 'DANRE' 'DICDI' 'ECOLI' 'HELPY' 'HUMAN' 'METJA' 'MOUSE' 'MYCGE' 'PSEPK' 'PSESM' 'RAT' 'SALCH' 'SALTY' 'SCHPO' 'STR' )
+# training_proteins_path=$files_path"/cafa3/processed_files/training_proteins.txt"
+# cut -f 1 $training_proteins_path | sort -u > $current_path"/temp_files/list_of_training_proteins.txt"
+# training_proteins=$current_path"/temp_files/list_of_training_proteins.txt"
+# #cut -f 1,5,6 $cath_path | tail -n +2 | sed 's/"//g' > tests/cath_genes_sf.txt
+# #cut -f 1,5,7 $cath_path | tail -n +2 | sed 's/"//g' > tests/cath_genes_ff.txt
+
+# metrics_report.rb -a $cath_path -b $testing_proteins -c $training_proteins -o tests/output_superfamily_stats.txt
+# metrics_report.rb -a $cath_path -b $testing_proteins -c $training_proteins -d funfamID -o tests/output_funfams_stats.txt
+# exit
 
 
 

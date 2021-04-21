@@ -13,21 +13,22 @@ export PATH
 
 current_path=`pwd`
 
-output_folder=$SCRATCH/DomFun/cafa/CAFA3_all_curC_results
+#output_folder=$SCRATCH/DomFun/cafa/CAFA3_all_curC_results
 #output_folder=$SCRATCH/DomFun/cafa/CAFA3_human_oldC_results
 #output_folder=$SCRATCH/DomFun/cafa/CAFA3_human_curC_results
 #output_folder=$SCRATCH/DomFun/cafa/CAFA2_all_curC_results
+output_folder=$SCRATCH/DomFun/cafa/CAFA2_human_curC_results
 #output_folder=$SCRATCH/DomFun/cafa/CAFA2_human_curC_results # no es current, sino old
 
 cath_path=$SCRATCH/DomFun/CATH
 cath_file=$cath_path/cath_funfams_full.tsv
 #cath_file=$cath_path/cath_42_human.tsv
 
-#cafa_data_path=~/projects/domfun_experiments/revision/cafa_challenge_files/cafa2/processed_files
-cafa_data_path=~/projects/domfun_experiments/revision/cafa_challenge_files/cafa3/processed_files
+cafa_data_path=~/projects/domfun_experiments/revision/cafa_challenge_files/cafa2/processed_files
+#cafa_data_path=~/projects/domfun_experiments/revision/cafa_challenge_files/cafa3/processed_files
 
-training_proteins_full_list=$cafa_data_path/training_proteins.txt
-#training_proteins_full_list=$cafa_data_path/training_proteins_human.txt
+#training_proteins_full_list=$cafa_data_path/training_proteins.txt
+training_proteins_full_list=$cafa_data_path/training_proteins_human.txt
 
 cafa_obo=$cafa_data_path/go.obo
 path_to_CAFA_mapping=$cafa_data_path"/CAFA_mapping"
