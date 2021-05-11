@@ -1,4 +1,9 @@
 #! /usr/bin/env bash
+#SBATCH --cpus=1
+#SBATCH --mem=4gb
+#SBATCH --time=1-00:00:00
+#SBATCH --error=job.%J.err
+#SBATCH --output=job.%J.out
 
 #Tool to analyze datasets and calculate information loss
 
@@ -9,7 +14,9 @@ export PATH
 dictionary=/mnt/home/users/bio_267_uma/elenarojano/projects/domfun_experiments/revision/cafa_challenge_files/cafa2/processed_files/accesion_geneid_dictionary.map
 
 #metrics_report.rb -i stats_input_file.txt -d $dictionary
-metrics_report.rb -i stats_input_file_cafa3_cur_cath.txt -d $dictionary -F cafa3_cur_cath_stats.html
+metrics_report.rb -i stats_input_file_cafa3_cur_cath.txt -d $dictionary -F cafa3_hmmer_cath_stats.html
+
+#metrics_report.rb -i human_stats_input_file_cafa3_cur_cath.txt -d $dictionary -F cafa3_cur_cath_stats.html
 exit
 
 

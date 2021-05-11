@@ -14,18 +14,19 @@ export PATH
 current_path=`pwd`
 
 #output_folder=$SCRATCH/DomFun/cafa/CAFA3_all_curC_results
-#output_folder=$SCRATCH/DomFun/cafa/CAFA3_human_oldC_results
+output_folder=$SCRATCH/DomFun/cafa/CAFA3_human_oldC_results
+#output_folder=$SCRATCH/DomFun/cafa/CAFA2_human_curC_results
 #output_folder=$SCRATCH/DomFun/cafa/CAFA3_human_curC_results
 #output_folder=$SCRATCH/DomFun/cafa/CAFA2_all_curC_results
-output_folder=$SCRATCH/DomFun/cafa/CAFA2_human_curC_results
+#output_folder=$SCRATCH/DomFun/cafa/CAFA2_human_curC_results
 #output_folder=$SCRATCH/DomFun/cafa/CAFA2_human_curC_results # no es current, sino old
 
 cath_path=$SCRATCH/DomFun/CATH
-cath_file=$cath_path/cath_funfams_full.tsv
-#cath_file=$cath_path/cath_42_human.tsv
+#cath_file=$cath_path/cath_funfams_full.tsv
+cath_file=$cath_path/cath_42_human.tsv
 
-cafa_data_path=~/projects/domfun_experiments/revision/cafa_challenge_files/cafa2/processed_files
-#cafa_data_path=~/projects/domfun_experiments/revision/cafa_challenge_files/cafa3/processed_files
+#cafa_data_path=~/projects/domfun_experiments/revision/cafa_challenge_files/cafa2/processed_files
+cafa_data_path=~/projects/domfun_experiments/revision/cafa_challenge_files/cafa3/processed_files
 
 #training_proteins_full_list=$cafa_data_path/training_proteins.txt
 training_proteins_full_list=$cafa_data_path/training_proteins_human.txt
@@ -48,7 +49,6 @@ ln -s $path_to_uniprot_mapping $output_folder/temp_files/accesion_geneid_diction
 targetID_geneid_dictionary=$output_folder/temp_files/targetID_geneid_dictionary.map
 cat $path_to_CAFA_mapping"/sp_species"*".map" > $targetID_geneid_dictionary
 
-
 domain_types=( "funfamID" "superfamilyID" )
 annotation_types=( "GOCC" "GOMF" "GOBP" )
 
@@ -56,29 +56,28 @@ if [ "$1" == "1" ]; then
 
 	echo 'Preparing CAFA tripartite network'
 
-	for domain_class in "${domain_types[@]}"
+	for annotation_type in "${annotation_types[@]}"
 	do
+		training_proteins=$cafa_data_path"/training_proteins/training_prots_"$annotation_type
+		echo $cath_file
+		echo $output_folder/temp_files/$annotation_type'_CATH_proteins_domains.txt'
+		cut -f 1 $training_proteins | sort -u > $output_folder/temp_files/$annotation_type'_training_proteins_list.txt'
+		cut -f 1,6,7 $cath_file | sort -u | grep -w -F -f $output_folder/temp_files/$annotation_type'_training_proteins_list.txt' | sed 's/"//g' > $output_folder/temp_files/$annotation_type'_CATH_proteins_domains.txt'
 
+		for domain_class in "${domain_types[@]}"
+		do
+		
 		if [ $domain_class == "funfamID" ]
 		then
 			domain_regex='ff'
 		else
 			domain_regex='[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*'
 		fi
-
-		for annotation_type in "${annotation_types[@]}"
-		do
-			training_proteins=$cafa_data_path"/training_proteins/training_prots_"$annotation_type
-			echo $cath_file
-			echo $output_folder/temp_files/$annotation_type'_CATH_proteins_domains.txt'
-			cut -f 1 $training_proteins | sort -u > $output_folder/temp_files/$annotation_type'_training_proteins_list.txt'		
-			cut -f 1,6,7 $cath_file | grep -w -F -f $output_folder/temp_files/$annotation_type'_training_proteins_list.txt' | sed 's/"//g'> $output_folder/temp_files/$annotation_type'_CATH_proteins_domains.txt'
-
 			generate_CAFA_tripartite_network.rb \
-			-a $output_folder/temp_files/$annotation_type'_CATH_proteins_domains.txt' \
-			-b $training_proteins \
-			-d $domain_class \
-			-o $output_folder/networks/CAFA_networks/$domain_class"_"$annotation_type"_tripartite_network.txt"	
+			 -a $output_folder/temp_files/$annotation_type'_CATH_proteins_domains.txt' \
+			 -b $training_proteins \
+			 -d $domain_class \
+			 -o $output_folder/networks/CAFA_networks/$domain_class"_"$annotation_type"_tripartite_network.txt"
 			
 			execution_name=$annotation_type'_associations_'$domain_class
 			regex='GO:'
@@ -90,7 +89,7 @@ if [ "$1" == "1" ]; then
 			\\$path_to_cath=$cath_file,
 			\\$methods=[jaccard;pcc;hypergeometric;simpson]" |  tr -d '[:space:]' `
 			echo $var_info
-			AutoFlow -w templates/domains_network_template_for_CAFA.txt -t '7-00:00:00' -m '20gb' -c 2 -o $output_folder"/associations/"$execution_name -n 'cal' -V $var_info $2  #-u 1
+			AutoFlow -w templates/domains_network_template_for_CAFA.txt -t '7-00:00:00' -m '20gb' -c 9 -o $output_folder"/associations/"$execution_name -n 'cal' -e -V $var_info $2  #-u 1
 		done
 	done
 fi
@@ -101,16 +100,16 @@ if [ "$1" == "2" ]; then
 	echo 'DomFun prediction:'
 
 	testing_proteins=$cafa_data_path/testing_proteins.txt #testing corregido: 3089 proteinas
-
+	norm_mode='rank'
 	#testing_proteins=$output_folder/temp_files/testing_proteins.map
 	#cut -f 2 $targetID_geneid_dictionary > $testing_proteins #esto es raro, predices para todo el diccionario q tb incluira testing, pero haces preds para el training	
-	#association_methods=( 'jaccard' )
 	association_methods=( 'hypergeometric' 'pcc' 'jaccard' 'simpson' )
-	#domain_types=( "funfamID" )
 	domain_types=( "funfamID" "superfamilyID" )
-	#annotation_types=( "GOCC" )
 	annotation_types=( "GOCC" "GOMF" "GOBP" )
 	
+	grep -w -F -f $testing_proteins $cath_file > $output_folder/temp_files/cath_sample.tsv
+	cath_file=$output_folder/temp_files/cath_sample.tsv
+	cut -f 1 $cath_file | sort -u | sed 's/"//g' > $output_folder/temp_files/list_of_proteins.txt
 	echo 'Preparing files for predicion:'
 	common_path=$output_folder/associations
 	for annotation_type in "${annotation_types[@]}"
@@ -122,9 +121,11 @@ if [ "$1" == "2" ]; then
 		        association_path=$common_path"/"$annotation_type"_associations_"$domain_type"/NetAnalyzer.rb_000*/raw/"$association_method"_values.txt"
 		        if [ "$association_method" == 'hypergeometric' ]; then
 		                integration_method='fisher'
+		                #summary_meth='min'
 		                #prediction_threshold=1
 		        else
 		                integration_method='stouffer'
+		                #summary_meth='max'
 		                #prediction_threshold=-10000
 		        fi
 
@@ -139,12 +140,14 @@ if [ "$1" == "2" ]; then
 		        # \\$prediction_threshold=$prediction_threshold,
 
 				var_info=`echo -e "\\$path_to_cath=$cath_file,
+						\\$proteins_list=$output_folder/temp_files/list_of_proteins.txt,
 				        \\$testing_proteins=$testing_proteins,
 						\\$association_path=$association_path,
 				        \\$domains_class=$domain_type,
 				        \\$annotation_type=$annotation_type,
 				        \\$association_method=$association_method,
 				        \\$integration_method=$integration_method,
+				        \\$norm_mode=$norm_mode,
 				        \\$accesion_geneid_dictionary=$path_to_uniprot_mapping,
 				        \\$targetID_geneid_dictionary=$targetID_geneid_dictionary" |  tr -d '[:space:]' `
 				AutoFlow -w templates/predictor_template.txt -t '01:00:00' -m '20gb' -c 8 -e -o $output_folder'/DomFunPredictions/'$execution_name -V $var_info -n 'cal' $2 #-u 1

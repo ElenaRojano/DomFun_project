@@ -8,23 +8,28 @@
 source ~soft_bio_267/initializes/init_R
 source ~soft_bio_267/initializes/init_autoflow
 
-current_path=`pwd`
 PATH="/mnt/home/users/bio_267_uma/elenarojano/dev_gem/DomFun/bin":$PATH
 export PATH
 
-current_path=`pwd`
+#current_path=`pwd`
+
+output_folder=$SCRATCH/DomFun/PPP/PPP_all_curC_results
+
+cath_path=$SCRATCH/DomFun/CATH
+cath_data_file=$cath_path/cath_funfams_full.tsv
+
 domfun_path='/mnt/scratch/users/bio_267_uma/elenarojano/DomFun'
 cath_data_file=$domfun_path'/CATH/cath_funfams_full.tsv' 
 protein_annotations_file=$domfun_path'/PPP/data/uniprot_data/all_uniprot_data.tab'
+
 active_annotations='kegg,reactome,gomf,gobp,gocc'
-ppp_networks=$current_path'/PPP_results/networks'
-ppp_protein_annotations=$current_path'/PPP_results/ppp_protein_annotations'
-kegg_pathways_organisms=$current_path'/PPP_results/kegg_files'
+ppp_networks=$output_folder'/networks'
+ppp_protein_annotations=$output_folder'/protein_annotations'
+kegg_pathways_organisms=$output_folder'/kegg_files'
 
 mkdir -p $ppp_networks
 mkdir -p $ppp_protein_annotations
 mkdir -p $kegg_pathways_organisms
-
 
 if [ "$1" == "1" ]; then
 	
@@ -51,14 +56,16 @@ if [ "$1" == "1" ]; then
 
 	#cat $kegg_pathways_organisms/*.txt > $kegg_pathways_organisms/all_kegg_ids.txt
 	#parse_kegg_identifiers.rb -a $kegg_pathways_organisms/all_kegg_ids.txt -o $kegg_pathways_organisms/all_translated_kegg_ids.txt
-
+	#rm goa_all.gaf.gz
 	echo '1. Generating FunFam networks'
+
 	add_protein_functional_families.rb \
 	 	-a $ppp_protein_annotations/curated_proteins_annotations.txt \
 	 	-d $cath_data_file \
 	 	-s cath_funfam_stats.txt \
 	 	-p $active_annotations \
-	 	-o $current_path'/PPP_results/cath_funfam_stats.txt'
+	 	-n $ppp_networks\
+	 	-o $output_folder'/cath_funfam_stats.txt'
 		#--translate2gene
 
 	translate_kegg_genes2pathways.rb \
@@ -73,9 +80,10 @@ if [ "$1" == "1" ]; then
 		-a $ppp_protein_annotations/curated_proteins_annotations.txt \
 		-d $cath_data_file \
 		-s cath_superfamily_stats.txt \
+		-n $ppp_networks\
 		-p $active_annotations \
 		-t 'superfamilyID' \
-		-o $current_path'/PPP_results/cath_superfamily_stats.txt'
+		-o $output_folder'/cath_superfamily_stats.txt'
 
 	translate_kegg_genes2pathways.rb \
 		-k $kegg_pathways_organisms/all_translated_kegg_ids.txt \
@@ -86,12 +94,12 @@ fi
 
 if [ "$1" == "2" ]; then
 
-	mkdir -p PPP_results/associations
+	mkdir -p $output_folder/associations
 	validation_methods=( "kcross" )
-	#validation_methods=( "kcross" "no_kcross" )
+	#validation_methods=( "no_kcross" )
 	domain_types=( "funfamID" "superfamilyID" )
-	annotation_types=( "reactome" "kegg" )
-	#annotation_types=( "gomf" "gobp" "gocc" "kegg" "reactome" )
+	#annotation_types=( "reactome" "kegg" )
+	annotation_types=( "gomf" "gobp" "gocc" "kegg" "reactome" )
 
 	for validation_method in "${validation_methods[@]}"
 	do
@@ -147,7 +155,7 @@ if [ "$1" == "2" ]; then
 					\\$domain_regex=$domain_regex,
 					\\$annotation_name=$annotation_name, 
 					\\$folds=$NUMBER" |  tr -d '[:space:]' `
-				AutoFlow -w templates/ppp_network_template.txt -t '7-00:00:00' -m '20gb' -c 6 -o 'PPP_results/associations/'$execution_name -n 'cal' -V $var_info $2  #-u 1
+				AutoFlow -w templates/ppp_network_template.txt -t '7-00:00:00' -m '20gb' -c 8 -o $output_folder'/associations/'$execution_name -n 'cal' -V $var_info $2  #-u 1
 			done
 		done
 	done
@@ -169,11 +177,11 @@ if [ "$1" == "3" ]; then
 		do 
 			for association_method in "${association_methods[@]}"
 			do 
-				common_path="/mnt/scratch/users/bio_267_uma/elenarojano/DomFun/CAFA3/analysis/PPP_results/associations"
+				common_path="/mnt/scratch/users/bio_267_uma/elenarojano/DomFun/PPP/PPP_all_curC_results/associations"
 				control_proteins=$common_path/$annotation_type"_"$domain_type"_no_kcross_associations/merge_pairs.rb_0000/"$annotation_type"_control.txt" #/merge_pairs.rb_0000/"$annotation_name"_control.txt"
 				association_path=$common_path/$annotation_type"_"$domain_type"_no_kcross_associations/NetAnalyzer.rb_000*/raw/"$association_method"_values.txt"
-				cat $common_path/$annotation_type"_"$domain_type"_kcross_associations/lines.R_"*"/best_thresolds.txt" > $current_path/PPP_results/tmp/best_thresolds.txt
-				best_threshold=`grep -w $association_method $current_path/PPP_results/tmp/best_thresolds.txt | cut -f 2`
+				cat $common_path/$annotation_type"_"$domain_type"_kcross_associations/lines.R_"*"/best_thresolds.txt" > $output_folder/tmp/best_thresolds.txt
+				best_threshold=`grep -w $association_method $output_folder/tmp/best_thresolds.txt | cut -f 2`
 				
 				if [ "$association_method" == "pcc" ]; then
 					best_threshold=-1
@@ -202,7 +210,7 @@ if [ "$1" == "3" ]; then
 					\\$meth_roc=$meth_roc,
 					\\$invert_flag=$invert_flag,
 					\\$path_to_cath=$cath_data_file" |  tr -d '[:space:]' `
-				AutoFlow -w templates/ppp_predictor_template.txt -t '7-00:00:00' -m '2gb' -c 1 -o 'PPP_results/DomFunPredictions/'$folder_name -V $var_info -n 'cal' $2 #-u 1
+				AutoFlow -w templates/ppp_predictor_template.txt -t '7-00:00:00' -m '2gb' -c 1 -o $output_folder'/DomFunPredictions/'$folder_name -V $var_info -n 'cal' $2 #-u 1
 			done
 		done
 	done
@@ -211,7 +219,7 @@ fi
 
 if [ "$1" == "4" ]; then
 	echo 'Make final PPP plots to compare methods'
-	mkdir -p $current_path"/PPP_results/final_plots"
+	mkdir -p $output_folder"/final_plots"
 	#associations=( 'gobp' 'gomf' 'kegg' 'reactome' )
 	#methods=( 'pcc' 'jaccard' 'simpson' )
 	#domains=( 'superfamily' )
@@ -242,7 +250,7 @@ if [ "$1" == "4" ]; then
 			-m prec_rec \
 			-e \
 			-f png \
-			-o $current_path"/PPP_results/final_plots/$domain"_"$method" \
+			-o $output_folder"/final_plots/$domain"_"$method" \
 			--legendposition topright		
 		done
 	done
@@ -270,7 +278,7 @@ if [ "$1" == "4" ]; then
 			-m prec_rec \
 			-e \
 			-f png \
-			-o $current_path"/PPP_results/final_plots/$domain"_"$method" \
+			-o $output_folder"/final_plots/$domain"_"$method" \
 			--legendposition topright		
 		done
 	done
