@@ -2,7 +2,6 @@ get_prediction_results){
 	PATH="~elenarojano/dev_gem/DomFun/bin":$PATH
 	export PATH
 	echo 'Performing proteins function prediction'
-	cut -f 1,5 $path_to_cath| grep -w -F -f $testing_proteins | cut -f 1 | sort -u | sed 's/"//g' > list_of_proteins.txt
 
 	final_association_path=$association_path
 	if [ $integration_method == "stouffer" ]; then
@@ -16,7 +15,7 @@ get_prediction_results){
 	domains_to_function_predictor.rb \
 	-a $final_association_path \
 	-f $path_to_cath \
-	-p list_of_proteins.txt \
+	-p $proteins_list \
 	-c $domains_class \
 	-i $integration_method \
 	-P [cpu] > prediction_results.txt
@@ -31,12 +30,16 @@ prediction_data_processing){
 	source ~soft_bio_267/initializes/init_R
 	PATH="~elenarojano/dev_gem/DomFun/bin":$PATH
 	export PATH
-	plot_density_for_predictions.R get_prediction_results)/prediction_results.txt 4 pred_dist.pdf
+	echo 'Normalize scores'
+	#plot_density_for_predictions.R get_prediction_results)/prediction_results.txt 4 pred_dist.pdf
 	?
 	normalize_combined_scores.rb \
 	-a get_prediction_results)/prediction_results.txt \
 	-o normalized_predictions.txt \
-	-i $integration_method
+	-i $integration_method \
+	-m $norm_mode
 
-	plot_density_for_predictions.R get_prediction_results)/normalized_predictions.txt 4 norm_pred_dist.pdf
+	# awk '{ if ($4 > 0.6) print $0}' normalized_predictions.txt > normalized_predictions_filt.txt
+	# mv normalized_predictions_filt.txt normalized_predictions.txt
+	#plot_density_for_predictions.R normalized_predictions.txt 4 norm_pred_dist.pdf
 }
